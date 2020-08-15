@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <title>VocabulaList</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript">
+            function checkIdPw(id, pw){
+                if (id == ""){
+                    return "Please input LOGIN ID!"
+                }
+                if (pw == ""){
+                    return "Please input PASSWORD!"
+                }
+                if (id.length > 20){
+                    return "Please input LOGIN ID within 20 characters!"
+                }
+                if (pw.length > 20){
+                    return "Please input PASSWORD within 20 characters!"
+                }
+                if (!id.match(/^[A-Za-z0-9]*$/)){
+                    return "Please input LOGIN ID using half-width characters!"
+                }
+                if (!pw.match(/^[A-Za-z0-9]*$/)){
+                    return "Please input PASSWORD using half-width characters!"
+                }
+                return "";
+            }
+            function regUser() {
+                if(!window.confirm('OK？')){
+                    return false;
+                }
+                var id=document.getElementById("reg_id").value;
+                var pw=document.getElementById("reg_pw").value;
+                
+                var errMsg = checkIdPw(id, pw);
+                if (errMsg != "") {
+                    alert(errMsg)
+                    return false;
+                }
+                $.ajax({
+                    type:"GET",
+                    url:"/regUser",
+                    data:{"reg_id":id,
+                        "reg_pw":pw},
+                    contentType: "application/json",
+                    success:function(result){
+                        var json_obj = JSON.parse(result);
+                        if(json_obj.result == "0"){
+                            alert("The LOGIN ID is already in use!");
+                        } else {
+                            $('#reg_id').val("");
+                            $('#reg_pw').val("");
+                            $('#regUserModal').modal('hide');
+                            $('#successMsg').modal('show');
+                        }
+                    },
+                    error:function(){
+                        alert('Error');
+                        $('#reg_id').val("");
+                        $('#reg_pw').val("");
+                        $('#regUserModal').modal('hide');
+                    }
+                });
+            }
+            function login(){
+                var id=document.getElementById("login_id").value;
+                var pw=document.getElementById("login_pw").value;
+                var errMsg = checkIdPw(id, pw);
+                if (errMsg != "") {
+                    alert(errMsg)
+                    return false;
+                }
+                $.ajax({
+                    type:"GET",
+                    url:"/checkUser",
+                    data:{"login_id":id,
+                        "login_pw":pw},
+                    contentType: "application/json",
+                    success:function(result){
+                        var json_obj = JSON.parse(result);
+                        if(json_obj.result == "0"){
+                            alert("Wrong LOGIN ID or PASSWORD!");
+                        } else {
+                            document.loginForm.submit();
+                        }
+                    },
+                    error:function(){
+                        alert('Error');
+                    }
+                });
+            }
+        </script>
+    </head>
+    <body class="">
+<!-- MAIN -->
+        <div class="container">
+            <h1 class="display-4 text-primary" style="text-align:center;">VocabulaList</h1><hr>
+            <div class="text-info" style="text-align: center;">You can easily register the searched English words !!</div>
+            <div class="text-info" style="text-align: center;">You will never forget this words !! (maybe...)</div>
+            <p>
+                <div class="card">
+                    <div class="card-header text-secondary">Please Login...</div>
+                    <div class="card-body">
+                        <form name="loginForm" method="post" action="/login">
+                            <div class="form-group">
+                                <input type="text" class="form-control" id="login_id" name="login_id" placeholder="LOGIN ID" />
+                            </div>
+                            <div class="form-group">
+                                <input type="password" class="form-control" id="login_pw" name="login_pw" placeholder="PASSWORD" />
+                            </div>
+                            <p><button class="btn btn-primary" style="width: 100%;" onclick="login(); return false;">LOGIN</button></p>
+                            <input type="text" name="dummy" style="display:none;">
+                        </form>
+                        <p><button class="btn btn-success" style="width: 100%;" data-toggle="modal" data-target="#regUserModal">
+                            REGISTER USER
+                        </button></p>
+                    </div>
+                </div>
+            </p>
+        </div>
+<!-- REG USER MODAL -->
+        <div class="modal fade" id="regUserModal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">
+                                REGISTER USER
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <form name="regUserForm" method="post">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="reg_id" name="reg_id" placeholder="LOGIN ID">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="reg_pw" name="reg_pw" placeholder="PASSWORD">
+                                </div>
+                                <div class="form-group" style="text-align: right;">
+                                    <button class="btn btn-primary" onclick="regUser(); return false;" >REGISTER</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- SUCCESS MSG -->
+        <div class="modal fade" id="successMsg">
+            <div class="modal-dialog" role="document">
+                <div class="alert alert-primary" role="alert" style="text-align: center;">
+                    ! Completed registering user
+                </div>
+            </div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    </body>
+</html>

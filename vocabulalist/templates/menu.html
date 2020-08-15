@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <title>VocabulaList</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript">
+            function showMsg(){
+                if('{{result}}'=='1'){
+                    $('#successMsg').modal('show');
+                }
+            }
+            function logout(){
+                document.headerForm.action="/logout";
+                document.headerForm.submit();
+            }
+            function radioCheckAdd(isChecked){
+                document.getElementById("cateList").disabled=true;
+                document.getElementById("cateName").disabled=false;
+            }
+            function radioCheckUpd(isChecked){
+                document.getElementById("cateList").disabled=false;
+                document.getElementById("cateName").disabled=false;
+            }
+            function radioCheckDel(isChecked){
+                document.getElementById("cateList").disabled=false;
+                document.getElementById("cateName").disabled=true;
+            }
+            function checkAllSearch(){
+                check = $('#allSearch').prop('checked');
+                if (check == true){
+                    document.getElementById("searchEnglish").disabled=true;
+                    document.getElementById("searchMeaning").disabled=true;
+                    document.getElementById("cateListSearch").disabled=true;
+                }else{
+                    document.getElementById("searchEnglish").disabled=false;
+                    document.getElementById("searchMeaning").disabled=false;
+                    document.getElementById("cateListSearch").disabled=false;
+                }
+            }
+            function checkInput(str, name, maxLen){
+                if (str == ''){
+                    return 'Please input ' + name + '!';
+                }
+                if (str.length > maxLen){
+                    return 'Please input ' + name + ' within ' + maxLen + ' characters!';
+                }
+                if (str.match(/[\'\"\;\(\)]+/)){
+                    return "Don't input Illegal characters in " + name + "!";
+                }
+                return '';
+            }
+            function regCate(){
+                if(!window.confirm('OK？')){
+                    return false;
+                }
+                var cmd = $('input[name="command"]:checked').val();
+                if (cmd == 'upd' || cmd == 'add'){
+                    var cateNm = document.getElementById("cateName").value;
+                    res = checkInput(cateNm, 'CATEGORY NAME', 40);
+                    if (res != ''){
+                        alert(res);
+                        return false;
+                    }
+                }
+                document.editCateForm.action="/regCate";
+                document.editCateForm.submit();
+            }
+            function regWoedModalOpen(){
+                document.regWordForm.english.value = "";
+                document.regWordForm.meaning.value = "";
+                document.regWordForm.updWordCd.value = "None";
+                document.getElementById("cateListWord").selectedIndex = 0;
+                $('#regWordModal').modal('show');
+            }
+            function regWord(){
+                if(!window.confirm('OK？')){
+                    return false;
+                }
+                var eng = document.getElementById("english").value;
+                var mea = document.getElementById("meaning").value;
+                var res1 = checkInput(eng, 'ENGLISH WORD', 100);
+                if (res1 != ''){
+                    alert(res1);
+                    return false;
+                }
+                var res2 = checkInput(mea, 'MEANING', 100);
+                if (res2 != ''){
+                    alert(res2);
+                    return false;
+                }
+                document.regWordForm.action="/regWord";
+                document.regWordForm.submit();
+            }
+            function editWord(wCd, eng, mea, cCd){
+                document.regWordForm.english.value = eng;
+                document.regWordForm.meaning.value = mea;
+                document.regWordForm.updWordCd.value = wCd;
+                if (cCd == "None") {
+                    document.getElementById("cateListWord").selectedIndex = 0;
+                } else {
+                    $('#cateListWord').val(cCd);
+                }
+                $('#regWordModal').modal('show');
+            }
+            function delWord(cd){
+                if(!window.confirm('OK？')){
+                    return false;
+                }
+                document.getElementById("delWordCd").value = cd;
+                document.delWordForm.submit();
+            }
+            function checkInputSearch(str, name){
+                if (str.match(/[\'\"\;\(\)]+/)){
+                    return "Don't input Illegal characters in " + name + "!";
+                }
+                return '';
+            }
+            function searchWord(){
+                check = $('#allSearch').prop('checked');
+                var eng = document.getElementById("searchEnglish").value;
+                var res1 = checkInputSearch(eng, 'ENGLISH WORD');
+                if (res1 != '' && !check){
+                    alert(res1);
+                    return false;
+                }
+                var mea = document.getElementById("searchMeaning").value;
+                var res2 = checkInputSearch(mea, 'MEANING');
+                if (res2 != '' && !check){
+                    alert(res2);
+                    return false;
+                }
+                document.searchWordForm.submit();
+            }
+            function paging(action){
+                document.getElementById("pageAction").value = action;
+                document.pagingForm.submit();
+            }
+        </script>
+        <style>
+            .headerButton{
+                width: 70px; 
+                height: 20px; 
+                font-size: 12px;
+                padding: 0px;
+            }
+            .commandButton{
+                width: 80px; 
+                height: 40px; 
+                font-size: 12px;
+                padding: 0px;
+                margin: 0px 5px 0px 5px;
+            }
+            .wordButton{
+                width: 50px; 
+                height: 25px; 
+                font-size: 12px;
+                padding: 0px;
+                margin: 0px 5px 0px 5px;
+            }
+            .wordListTd{
+                vertical-align: middle !important;
+                padding: 5px !important;
+                word-break : break-all;
+            }
+        </style>
+    </head>
+    <body class="" onload="showMsg()">
+        <div class="container" style="margin: 0px; padding: 0px; max-width: 100%;">
+<!-- HEADER -->
+            <table>
+                <tr>
+                    <td>
+                        <h1 class="display-6 text-primary" style="text-align:left; font-size: 27px; margin: 0px;">VocabulaList</h1>
+                    </td>
+                    <td style="width: 100%; text-align:right;">
+                        <form name="headerForm" method="post">
+                            <!--<button class="btn btn-success headerButton" onclick="editUser(); return false;">EDIT USER</button>-->
+                            <button class="btn btn-secondary headerButton" onclick="logout(); return false;">LOGOUT</button>
+                        </form>
+                    </td>
+                </tr>
+            </table>
+            <hr style="margin:0px 0px 10px 0px;">
+<!-- COMMAND BUTTON -->
+            <table style="width: 100%;">
+                <tr>
+                    <td style="text-align: left;">
+                        <button class="btn btn-info commandButton" data-toggle="modal" data-target="#searchWordModal">SEARCH<br />WORD</button>
+                        <button class="btn btn-success commandButton" data-toggle="modal" data-target="#editCateModal">EDIT<br />CATEGORY</button>
+                        <button class="btn btn-primary commandButton" onclick="regWoedModalOpen(); return false;">REGISTER<br />WORD</button>        
+                    </td>
+                    <td style="text-align: right; vertical-align: bottom;">
+                        <form name="pagingForm" method="post"action="/paging">
+                            {% if prevFlg %}
+                            <a href="javascript:paging('1')">＜＜</a>
+                            {% else %}
+                            ＜＜
+                            {% endif %}
+                            　
+                            {% if nextFlg %}
+                            <a href="javascript:paging('2')">＞＞</a>
+                            {% else %}
+                            ＞＞
+                            {% endif %}
+                            <input type="hidden" id="pageAction" name="pageAction">
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+<!-- WORD DATA -->
+                        <table class="table table-striped">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th style="width: 30%;">ENGLISH</th>
+                                    <th style="width: 30%;">MEANING</th>
+                                    <th style="width: 30%;">CATEGORY</th>
+                                    <th style="width: 30%; text-align: center;">ACT</th>
+                                </tr>
+                            </thead>
+                                {% for word in wordList %}
+                                <tr>
+                                    <td class="wordListTd">{{word[1]}}</td>
+                                    <td class="wordListTd">{{word[2]}}</td>
+                                    <td class="wordListTd">{{word[4]}}</td>
+                                    <td style="padding: 0px; text-align: center; vertical-align: middle;">
+                                        <p style="margin: 0px;"><button class="btn btn-success wordButton" onclick="editWord('{{word[0]}}', '{{word[1]}}', '{{word[2]}}', '{{word[3]}}'); return false;">EDIT</button></p>
+                                        <p style="margin: 0px 0px 2px 0px;"><button class="btn btn-secondary wordButton" onclick="delWord('{{word[0]}}'); return false;">DEL</button></p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+<!-- EDIT CATEGORY MODAL -->
+        <div class="modal fade" id="editCateModal">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title">
+                                    EDIT CATEGORY
+                                </h4>
+                            </div>
+                            <div class="card-body" style="margin: 0px; padding: 5px;">
+                                <form name="editCateForm" method="post">
+                                    <table style="width: 100%;">
+                                        <tr>
+                                            <td style="width: 30%;">
+                                                <div class="m-1 btn-group btn-gorup-toggle" data-toggle="bottons">
+                                                    <label class="btn btn-secondary active">
+                                                        <input type="radio" name="command" id="add" value="add" onclick="radioCheckAdd()" checked>ADD
+                                                    </label>
+                                                    <label class="btn btn-secondary">
+                                                        <input type="radio" name="command" id="upd" value="upd" onclick="radioCheckUpd()">UPD
+                                                    </label>
+                                                    <label class="btn btn-secondary">
+                                                        <input type="radio" name="command" id="del" value="del" onclick="radioCheckDel()">DEL
+                                                    </label>
+                                                </div>                    
+                                            </td>
+                                            <td style="width: 70%; padding-top: 9px;">
+                                                <div class="form-group">
+                                                    <select class="form-control" id="cateList" name="cateList" disabled>
+                                                        {% for cate in cateList %}
+                                                        <option value="{{cate[0]}}">{{cate[1]}}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 100%;" colspan="2">
+                                                <div class="form-group">
+                                                    <input type="text" class="form-control" id="cateName" name="cateName" placeholder="CATEGORY NAME">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <div class="form-group" style="text-align: right;">
+                                        <button class="btn btn-primary" onclick="regCate(); return false;" >DO COMMAND</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+<!-- REG WORD MODAL -->
+        <div class="modal fade" id="regWordModal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">
+                                REGISTER WORD
+                            </h4>
+                        </div>
+                        <div class="card-body" style="margin: 0px; padding: 5px;">
+                            <form name="regWordForm" method="post">
+                                <table style="width: 100%;">
+                                    <tr>
+                                        <td style="width: 100%;">
+                                            <div class="form-group">
+                                                <input type="text" class="form-control" id="english" name="english" placeholder="ENGLISH WORD">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 100%;">
+                                            <div class="form-group">
+                                                <input type="text" class="form-control" id="meaning" name="meaning" placeholder="MEANING">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <select class="form-control" id="cateListWord" name="cateListWord">
+                                                    {% for cate in cateList %}
+                                                    <option value="{{cate[0]}}">{{cate[1]}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div class="form-group" style="text-align: right;">
+                                    <button class="btn btn-primary" onclick="regWord(); return false;" >REGISTER</button>
+                                </div>
+                                <input type="hidden" id="updWordCd" name="updWordCd">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- REG WORD MODAL -->
+        <div class="modal fade" id="searchWordModal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">
+                                SEARCH WORD
+                            </h4>
+                        </div>
+                        <div class="card-body" style="margin: 0px; padding: 5px;">
+                            <form name="searchWordForm" method="post" action="/searchWord">
+                                <table style="width: 100%;">
+                                    <tr>
+                                        <td style="width: 100%;" colspan="2">
+                                            <div class="form-group">
+                                                <input type="text" class="form-control" id="searchEnglish" name="searchEnglish" placeholder="ENGLISH WORD">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 100%;" colspan="2">
+                                            <div class="form-group">
+                                                <input type="text" class="form-control" id="searchMeaning" name="searchMeaning" placeholder="MEANING">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <div class="form-group">
+                                                <select class="form-control" id="cateListSearch" name="cateListSearch">
+                                                        <option value="None">-</option>
+                                                    {% for cate in cateList %}
+                                                    <option value="{{cate[0]}}">{{cate[1]}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;">
+                                            <label class="btn btn-primary active">
+                                                <input type="checkbox" id="allSearch" name="allSearch" value="1"  onclick="checkAllSearch();"> ALL SEARCH
+                                            </label>        
+                                        </td>
+                                        <td>
+                                            <div class="form-group" style="text-align: right;">
+                                                <button class="btn btn-primary" onclick="searchWord(); return false;" >SEARCH</button>
+                                            </div>            
+                                        </td>
+                                    </tr>
+                                </table>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- SUCCESS MSG -->
+        <div class="modal fade" id="successMsg">
+            <div class="modal-dialog" role="document">
+                <div class="alert alert-primary" role="alert" style="text-align: center;">
+                    ! Completed Command
+                </div>
+            </div>
+        </div>
+        <form name="delWordForm" method="post" action="/delWord">
+            <input type="hidden" id="delWordCd" name="delWordCd">
+        </form> 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    </body>
+</html>
